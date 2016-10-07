@@ -1,0 +1,166 @@
+﻿<!DOCTYPE html>
+<html ng-app="main">
+<head>
+    <title></title>
+    <meta charset="utf-8" />
+    <link href="/Content/bootstrap.css" rel="stylesheet" />
+    <link href="/Content/bootstrap-theme.css" rel="stylesheet" />
+    <link href="/Content/toastr.css" rel="stylesheet" />
+
+    <script src="/Scripts/angular.js"></script>
+    <script src="/Scripts/jquery-1.9.1.js"></script>
+    <script src="/Scripts/jquery.signalR-2.2.0.js"></script>
+    <script src="/signalr/hubs"></script>
+    <script src="/Scripts/toastr.js"></script>
+
+    <script>
+        (function () {
+            angular.module('main', [])
+                .controller('mainCtrl', mainCtrl)
+                .service('chatService', chatService)
+                .value('toastr', toastrFacade());
+
+            mainCtrl.$inject = ['$scope', 'chatService', 'toastr'];
+            function mainCtrl($scope, chatService, toastr) {
+                var self = this;
+                self.history = 'welcome to the chat';
+                self.newMessage = '';
+                self.name = '';
+                self.roomName = '';
+                self.inRoom = false;
+
+                self.onSubmit = onSubmit;
+                self.onJoin = onJoin;
+                self.onLeave = onLeave;
+                self.onClear = onClear;
+
+                (function init() {
+                    $.connection.chat.client.newMessage = newMessage;
+                    $.connection.chat.client.newNotification = newNotification;
+                })();
+
+                function onClear() {
+                    self.newMessage = '';
+                }
+
+                function onJoin() {
+                    self.inRoom = true;
+                    chatService.joinRoom(self.roomName, self.name);
+                }
+
+                function onLeave() {
+                    self.inRoom = false;
+                    chatService.leaveRoom(self.roomName, self.name);
+                }
+
+                function onSubmit() {
+                    sendMessage(self.roomName, self.name, self.newMessage);
+                    displayMessage("Me : " + self.newMessage);
+                }
+
+                function sendMessage(roomName, name, message) {
+                    chatService.sendMessage(roomName, name, message);
+                }
+
+                function newMessage(message) {
+                    displayMessage(message);
+                    $scope.$apply();
+                }
+
+                function newNotification(message) {
+                    toastr.success(message);
+                }
+
+                function displayMessage(message) {
+                    self.history += "\r\n" + message;
+                }
+            }
+
+            chatService.$inject = [];
+            function chatService() {
+                this.sendMessage = sendMessage;
+                this.joinRoom = joinRoom;
+                this.leaveRoom = leaveRoom;
+
+                (function init() {
+                    $.connection.hub.logging = true;
+                    $.connection.hub.start();
+                    $.connection.hub.error(function (err) {
+                        console.log('Error: ' + err);
+                    });
+                })();
+
+                function sendMessage(roomName, name, message) {
+                    var requestData = {
+                        RoomName: roomName,
+                        Message: message,
+                        Name: name
+                    }
+                    $.connection.chat.server.sendMessage(requestData);
+                }
+
+                function joinRoom(roomName, name) {
+                    $.connection.chat.server.joinRoom(roomName, name);
+                }
+
+                function leaveRoom(roomName, name) {
+                    $.connection.chat.server.leaveRoom(roomName, name);
+                }
+            }
+            function toastrFacade() {
+                if (!toastr) {
+                    alert('toastr not found');
+                    return;
+                }
+                toastr.options.closeButton = true;
+                return toastr;
+            }
+        })();
+    </script>
+</head>
+<body>
+    <div class="container">
+        <form class="form-horizontal" ng-controller="mainCtrl as vm">
+            <fieldset>
+                <legend>Chat</legend>
+                <div class="form-group">
+                    <label for="textArea" class="col-lg-2 control-label">Name</label>
+                    <div class="col-lg-10">
+                        <input type="text" class="form-control" ng-model="vm.name" />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="room" class="col-lg-2 control-label">Room</label>
+                    <div class="col-lg-10">
+                        <input type="text" id="room" class="form-control" ng-disabled="vm.inRoom" ng-model="vm.roomName" />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-lg-10 col-lg-offset-2">
+                        <button class="btn btn-primary" ng-click="vm.onJoin()" ng-disabled="!vm.name || vm.inRoom || !vm.roomName">Join Room</button>
+                        <button class="btn btn-danger" ng-click="vm.onLeave()" ng-disabled="!vm.inRoom">Leave Room</button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="textArea" class="col-lg-2 control-label">Messages</label>
+                    <div class="col-lg-10">
+                        <textarea class="form-control" rows="10" id="textArea" readonly="readonly">{{vm.history}}</textarea>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="textArea" class="col-lg-2 control-label">Input</label>
+                    <div class="col-lg-10">
+                        <textarea class="form-control" rows="2" id="textArea" ng-model="vm.newMessage"></textarea>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-lg-10 col-lg-offset-2">
+                        <button type="reset" class="btn btn-default" ng-click="vm.onClear()" ng-disabled="!vm.newMessage || !vm.name">Clear</button>
+                        <button type="submit" class="btn btn-primary" ng-click="vm.onSubmit()" ng-disabled="!vm.newMessage || !vm.inRoom || !vm.name">Submit</button>
+                    </div>
+                </div>
+            </fieldset>
+        </form>
+    </div>
+</body>
+</html>

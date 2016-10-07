@@ -1,0 +1,16 @@
+{
+  "name": "SignalR",
+  "version": "1.0.0",
+  "description": "Test SignalR app",
+  "authors": [
+    "Allen Chen"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}

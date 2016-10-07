@@ -1,0 +1,41 @@
+﻿<form class="form-horizontal">
+    <fieldset>
+        <legend>Chat</legend>
+        <div class="form-group">
+            <label for="textArea" class="col-lg-2 control-label">Name</label>
+            <div class="col-lg-10">
+                <input type="text" class="form-control" ng-model="vm.name" />
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="room" class="col-lg-2 control-label">Room</label>
+            <div class="col-lg-10">
+                <input type="text" id="room" class="form-control" ng-disabled="vm.inRoom" ng-model="vm.roomName" />
+            </div>
+        </div>
+        <div class="form-group">
+            <div class="col-lg-10 col-lg-offset-2">
+                <button class="btn btn-primary" ng-click="vm.onJoin()" ng-disabled="!vm.name || vm.inRoom || !vm.roomName">Join Room</button>
+                <button class="btn btn-danger" ng-click="vm.onLeave()" ng-disabled="!vm.inRoom">Leave Room</button>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="textArea" class="col-lg-2 control-label">Messages</label>
+            <div class="col-lg-10">
+                <textarea class="form-control" rows="10" id="textArea" readonly="readonly">{{vm.history}}</textarea>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="textArea" class="col-lg-2 control-label">Input</label>
+            <div class="col-lg-10">
+                <textarea class="form-control" rows="2" id="textArea" ng-model="vm.newMessage"></textarea>
+            </div>
+        </div>
+        <div class="form-group">
+            <div class="col-lg-10 col-lg-offset-2">
+                <button type="reset" class="btn btn-default" ng-click="vm.onClear()" ng-disabled="!vm.newMessage || !vm.name">Clear</button>
+                <button type="submit" class="btn btn-primary" ng-click="vm.onSubmit()" ng-disabled="!vm.newMessage || !vm.inRoom || !vm.name">Submit</button>
+            </div>
+        </div>
+    </fieldset>
+</form>
